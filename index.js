@@ -7,7 +7,8 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 app.use(cors());
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const res = require("express/lib/response");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.mdpo3.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
@@ -25,6 +26,13 @@ async function run() {
       const query = {};
       const cursor = allInventoryItem.find(query);
       const result = await cursor.toArray();
+      res.send(result);
+    });
+    // get single item
+    app.get("/inventory/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await allInventoryItem.findOne(query);
       res.send(result);
     });
     console.log("connect mongo");
