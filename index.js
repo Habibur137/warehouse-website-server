@@ -35,6 +35,24 @@ async function run() {
       const result = await allInventoryItem.findOne(query);
       res.send(result);
     });
+    // upate single data
+    app.put("/inventory/:id", async (req, res) => {
+      const updateQuantity = req.body;
+      const id = req.params.id;
+      const options = { upsert: true };
+      const filter = { _id: ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          quantity: updateQuantity.quantity,
+        },
+      };
+      const result = await allInventoryItem.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
     console.log("connect mongo");
   } finally {
     // await client.close();
