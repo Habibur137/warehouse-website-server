@@ -23,16 +23,28 @@ async function run() {
       .collection("inventoryItem");
     // get all data from db
     app.get("/inventory", async (req, res) => {
-      const query = {};
+      const query = req.query;
       const cursor = allInventoryItem.find(query);
-      const result = await cursor.toArray();
-      res.send(result);
+      if (query.releaseYear) {
+        const result = await cursor.toArray();
+        res.send(result);
+      } else {
+        const result = await cursor.toArray();
+        res.send(result);
+      }
     });
     // get single item
     app.get("/inventory/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const result = await allInventoryItem.findOne(query);
+      res.send(result);
+    });
+    // delete single item
+    app.delete("/inventory/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await allInventoryItem.deleteOne(query);
       res.send(result);
     });
     // upate single data
