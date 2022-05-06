@@ -24,8 +24,12 @@ async function run() {
     // get all data from db
     app.get("/inventory", async (req, res) => {
       const query = req.query;
+      console.log(query);
       const cursor = allInventoryItem.find(query);
       if (query.releaseYear) {
+        const result = await cursor.toArray();
+        res.send(result);
+      } else if (query.email) {
         const result = await cursor.toArray();
         res.send(result);
       } else {
@@ -38,6 +42,12 @@ async function run() {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const result = await allInventoryItem.findOne(query);
+      res.send(result);
+    });
+    // post single data
+    app.post("/inventory", async (req, res) => {
+      const item = req.body;
+      const result = await allInventoryItem.insertOne(item);
       res.send(result);
     });
     // delete single item
