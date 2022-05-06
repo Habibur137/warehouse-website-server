@@ -46,22 +46,25 @@ async function run() {
       });
       res.send({ accessToken });
     });
-    // get all data from db
-    app.get("/inventory", verifyJWT, async (req, res) => {
+    app.get("/inventorys", verifyJWT, async (req, res) => {
       const query = req.query;
+      const decodedEmail = req.decoded.email;
       console.log(query);
+      if (query.email === decodedEmail) {
+        const cursor = allInventoryItem.find(query);
+        const result = await cursor.toArray();
+        res.send(result);
+      } else {
+        res.status(401).send({ message: "fobiden access" });
+      }
+    });
+    // get all data from db
+    app.get("/inventory", async (req, res) => {
+      const query = req.query;
       const cursor = allInventoryItem.find(query);
       if (query.releaseYear) {
         const result = await cursor.toArray();
         res.send(result);
-      } else if (query.email) {
-        const decodedEmail = req.decoded.email;
-        if (query.email === decodedEmail) {
-          const result = await cursor.toArray();
-          res.send(result);
-        } else {
-          res.status(403).send({ message: "forbidden access" });
-        }
       } else {
         const result = await cursor.toArray();
         res.send(result);
