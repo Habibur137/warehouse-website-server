@@ -1,11 +1,28 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(cors());
+
+const verifyJWT = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: "unathorized" });
+  }
+  const token = authHeader.split(" ")[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
+    if (err) {
+      return res.status(403).send({ message: "fobiden" });
+    }
+    req.decoded = decoded;
+    console.log("decoded", decoded);
+  });
+  next();
+};
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const res = require("express/lib/response");
@@ -21,8 +38,16 @@ async function run() {
     const allInventoryItem = client
       .db("sunriseMotors")
       .collection("inventoryItem");
+    // auth
+    app.post("/login", async (req, res) => {
+      const email = req.body;
+      const accessToken = jwt.sign(email, process.env.ACCESS_TOKEN, {
+        expiresIn: "1d",
+      });
+      res.send({ accessToken });
+    });
     // get all data from db
-    app.get("/inventory", async (req, res) => {
+    app.get("/inventory", verifyJWT, async (req, res) => {
       const query = req.query;
       console.log(query);
       const cursor = allInventoryItem.find(query);
@@ -30,8 +55,13 @@ async function run() {
         const result = await cursor.toArray();
         res.send(result);
       } else if (query.email) {
-        const result = await cursor.toArray();
-        res.send(result);
+        const decodedEmail = req.decoded.email;
+        if (query.email === decodedEmail) {
+          const result = await cursor.toArray();
+          res.send(result);
+        } else {
+          res.status(403).send({ message: "forbidden access" });
+        }
       } else {
         const result = await cursor.toArray();
         res.send(result);
